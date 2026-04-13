@@ -1,16 +1,17 @@
 import { cookies } from "next/headers";
 import type { Metadata } from "next";
 import "./globals.css";
-
 import { cn } from "@/lib/utils";
+import { auth } from "@/lib/auth";
 
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { ActiveThemeProvider } from "@/components/active-theme";
+import QueryProvider from "@/components/providers/query-provider";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
-  title: "Orcish Dashboard",
-  description:
-    "A fully responsive analytics dashboard featuring dynamic charts, interactive tables, a collapsible sidebar, and a light/dark mode theme switcher. Built with modern web technologies, it ensures seamless performance across devices, offering an intuitive user interface for data visualization and exploration.",
+  title: "SIPETRA Dashboard",
+  description: "Digital Archiving and Sequential Task Approval System",
 };
 
 export default async function RootLayout({
@@ -18,7 +19,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cookieStore = await cookies();
+  const [session, cookieStore] = await Promise.all([auth(), cookies()]);
   const activeThemeValue = cookieStore.get("active_theme")?.value;
   const isScaled = activeThemeValue?.endsWith("-scaled");
 
@@ -28,7 +29,7 @@ export default async function RootLayout({
         className={cn(
           "bg-background overscroll-none font-sans antialiased",
           activeThemeValue ? `theme-${activeThemeValue}` : "",
-          isScaled ? "theme-scaled" : ""
+          isScaled ? "theme-scaled" : "",
         )}
       >
         <ThemeProvider
@@ -38,9 +39,12 @@ export default async function RootLayout({
           disableTransitionOnChange
           enableColorScheme
         >
-          <ActiveThemeProvider initialTheme={activeThemeValue}>
-            {children}
-          </ActiveThemeProvider>
+          <QueryProvider session={session}>
+            <ActiveThemeProvider initialTheme={activeThemeValue}>
+              {children}
+            </ActiveThemeProvider>
+            <Toaster position="top-center" richColors />
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

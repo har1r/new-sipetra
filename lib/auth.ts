@@ -1,61 +1,34 @@
-import db from "@/lib/db";
-import { comparePassword, toNumberSafe, toStringSafe } from "@/lib/utils";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import NextAuth from "next-auth";
+import authConfig from "../auth.config";
+import db from "@/lib/db";
+import bcrypt from "bcryptjs";
 import Credentials from "next-auth/providers/credentials";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { signInSchema } from "@/app/(auth)/sign-in/_types/signInSchema";
-import { JWT } from "next-auth/jwt";
+import { Role } from "@/generated/prisma";
 
-declare module "next-auth" {
-  interface User {
-    name?: string | null;
-    role?: string | null;
-  }
-}
-
-declare module "next-auth/jwt" {
-  interface JWT {
-    name?: string | null;
-    role?: string | null;
-  }
-}
-
-export const { handlers, signIn, signOut, auth } = NextAuth({
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
+  secret: process.env.AUTH_SECRET,
+  session: { strategy: "jwt" },
   providers: [
     Credentials({
-      credentials: {
-        email: {},
-        password: {},
-      },
-      authorize: async (credentials) => {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("Email and password are required");
-        }
-
-        const validatedCredentials = signInSchema.parse(credentials);
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
 
         const user = await db.user.findUnique({
-          where: {
-            email: validatedCredentials.email,
-          },
+          where: { email: credentials.email as string },
         });
 
-        if (!user) {
-          throw new Error("Invalid email or password");
-        }
+        if (!user || !user.password) return null;
 
-        const isPasswordValid = await comparePassword(
-          validatedCredentials.password,
+        const isPasswordValid = await bcrypt.compare(
+          credentials.password as string,
           user.password,
         );
 
-        if (!isPasswordValid) {
-          throw new Error("Invalid email or password");
-        }
+        if (!isPasswordValid) return null;
 
         return {
-          id: toStringSafe(user.id),
+          id: user.id,
           email: user.email,
           name: user.name,
           role: user.role,
@@ -63,30 +36,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
-  pages: {
-    signIn: "/sign-in",
-  },
-
   callbacks: {
-    jwt({ token, user }) {
-      const clonedToken = token;
+    async jwt({ token, user }) {
       if (user) {
-        clonedToken.id = toNumberSafe(user.id);
-        clonedToken.name = user?.name;
-        clonedToken.role = user?.role;
+        token.id = user.id;
+        token.role = user.role;
       }
-      return clonedToken;
+      return token;
     },
-    session({ session, token }) {
-      const clonedSession = session;
-
-      if (clonedSession.user) {
-        clonedSession.user.id = toStringSafe(token.id);
-        clonedSession.user.name = token.name;
-        clonedSession.user.role = token.role;
+    async session({ session, token }) {
+      if (token && session.user) {
+        session.user.id = token.id as string;
+        session.user.role = token.role as Role;
       }
-
-      return clonedSession;
+      return session;
     },
   },
 });

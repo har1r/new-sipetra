@@ -1,71 +1,95 @@
 "use client";
-import { useSignIn } from "@/app/(auth)/sign-in/_services/use-mutations";
-import {
-  signInDefaultValues,
-  signInSchema,
-  SignInSchema,
-} from "@/app/(auth)/sign-in/_types/signInSchema";
-import { Button } from "@/components/ui/button";
-import { ControlledInput } from "@/components/ui/controlled/controlled-input";
-import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
-import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
 
-const SignInForm = () => {
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signInSchema, SignInSchema } from "../_types/signInSchema";
+import { useSignIn } from "../_services/use-mutations";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+
+export function SignInForm() {
+  const { mutate: login, isPending } = useSignIn();
+
   const form = useForm<SignInSchema>({
-    defaultValues: signInDefaultValues,
     resolver: zodResolver(signInSchema),
+    defaultValues: { email: "", password: "" },
   });
 
-  const signInMutation = useSignIn();
-
-  const onSubmit: SubmitHandler<SignInSchema> = (data) => {
-    signInMutation.mutate(data);
-  };
-
   return (
-    <FormProvider {...form}>
+    <Form {...form}>
       <form
-        className="w-full bg-white rounded-3xl shadow-2xl px-8 py-10 space-y-6 border border-white/40"
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={form.handleSubmit((data) => login(data))}
+        className="flex w-full flex-col"
+        style={{ gap: "1.25rem" }}
       >
-        <div className="text-center space-y-1">
-          <h2 className="text-2xl font-bold text-[#7A4A2A]">
-            Welcome Back
-          </h2>
-          <p className="text-sm text-[#5c3b22]/70">
-            Sign in to continue
-          </p>
-        </div>
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem
+              className="flex flex-col items-start"
+              style={{ gap: "0.375rem" }}
+            >
+              <FormLabel className="font-semibold" style={{ margin: 0 }}>
+                Email
+              </FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="name@example.com"
+                  {...field}
+                  className="h-11"
+                  style={{ width: "100%" }}
+                />
+              </FormControl>
+              <FormMessage style={{ marginTop: "0.25rem" }} />
+            </FormItem>
+          )}
+        />
 
-        <div className="space-y-4">
-          <ControlledInput<SignInSchema> name="email" label="Email" />
-          <ControlledInput<SignInSchema>
-            name="password"
-            label="Password"
-            type="password"
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem
+              className="flex flex-col items-start"
+              style={{ gap: "0.375rem" }}
+            >
+              <FormLabel className="font-semibold" style={{ margin: 0 }}>
+                Password
+              </FormLabel>
+              <FormControl>
+                <Input
+                  type="password"
+                  placeholder="******"
+                  {...field}
+                  className="h-11"
+                  style={{ width: "100%" }}
+                />
+              </FormControl>
+              <FormMessage style={{ marginTop: "0.25rem" }} />
+            </FormItem>
+          )}
+        />
 
-        <Button
-          className="w-full bg-[#2EA7D7] hover:bg-[#1F7FA5] text-white py-6 text-lg rounded-xl shadow-lg"
-          isLoading={signInMutation.isPending}
-        >
-          Sign In
-        </Button>
-
-        <div className="text-center text-sm text-[#5c3b22]/80">
-          Don&apos;t have an account?{" "}
-          <Link
-            href="/sign-up"
-            className="text-[#2EA7D7] font-medium hover:underline"
+        <div style={{ marginTop: "0.5rem" }}>
+          <Button
+            type="submit"
+            className="w-full h-11"
+            disabled={isPending}
+            style={{ width: "100%" }}
           >
-            Sign up
-          </Link>
+            {isPending ? "Mohon tunggu..." : "Masuk"}
+          </Button>
         </div>
       </form>
-    </FormProvider>
+    </Form>
   );
-};
-
-export { SignInForm };
+}

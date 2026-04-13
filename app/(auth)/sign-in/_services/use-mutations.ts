@@ -1,25 +1,29 @@
-import { signIn, signOut } from "@/app/(auth)/sign-in/_services/mutations";
-import { SignInSchema } from "@/app/(auth)/sign-in/_types/signInSchema";
+"use client";
+
 import { useMutation } from "@tanstack/react-query";
+import { signIn } from "./mutations";
+import { SignInSchema } from "../_types/signInSchema";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
-const useSignIn = () => {
-  return useMutation({
-    mutationFn: async (data: SignInSchema) => {
-      await signIn(data);
-    },
-  });
-};
-
-const useSignOut = () => {
+export const useSignIn = () => {
   const router = useRouter();
 
   return useMutation({
-    mutationFn: signOut,
-    onSuccess: () => {
-      router.push("/sign-in");
+    mutationFn: async (data: SignInSchema) => {
+      return await signIn(data);
+    },
+    onSuccess: (res) => {
+      if (res?.success) {
+        toast.success("Login berhasil!");
+        router.push("/dashboard");
+        router.refresh();
+      } else {
+        toast.error(res?.error || "Gagal masuk");
+      }
+    },
+    onError: () => {
+      toast.error("Terjadi kesalahan pada server");
     },
   });
 };
-
-export { useSignIn, useSignOut };

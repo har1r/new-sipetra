@@ -1,18 +1,35 @@
-import { getErrorMessage } from "@/lib/getErrorMessage";
-import { isRedirectError } from "next/dist/client/components/redirect-error";
-
-type Options<T> = {
+type ExecuteActionProps<T> = {
   actionFn: () => Promise<T>;
-};
-const executeAction = async <T>({ actionFn }: Options<T>) => {
-  try {
-    await actionFn();
-  } catch (error) {
-    if (isRedirectError(error)) {
-      throw error;
-    }
-    throw new Error(getErrorMessage(error));
-  }
+  successMessage?: string;
 };
 
-export { executeAction };
+export async function executeAction<T>({
+  actionFn,
+  successMessage,
+}: ExecuteActionProps<T>) {
+  try {
+    const data = await actionFn();
+
+    return {
+      success: true,
+      data,
+      message: successMessage || "Operation successful",
+    };
+  } catch (error: any) {
+    console.error("Action Error:", error);
+
+    // Menangani error dari Zod (Validasi)
+    if (error.name === "ZodError") {
+      return {
+        success: false,
+        error: "Data yang dikirim tidak valid",
+      };
+    }
+
+    // Menangani error umum
+    return {
+      success: false,
+      error: error.message || "Terjadi kesalahan internal server",
+    };
+  }
+}

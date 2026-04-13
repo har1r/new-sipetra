@@ -137,7 +137,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Users\\Pavilion\\Desktop\\orcish-dashboard\\generated\\prisma",
+      "value": "C:\\Users\\AIO SAKA\\Desktop\\new-sipetra\\generated\\prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -151,11 +151,11 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\Users\\Pavilion\\Desktop\\orcish-dashboard\\prisma\\schema.prisma",
+    "sourceFilePath": "C:\\Users\\AIO SAKA\\Desktop\\new-sipetra\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": "../../.env",
+    "rootEnvPath": null,
     "schemaEnvPath": "../../.env"
   },
   "relativePath": "../../prisma",
@@ -165,7 +165,6 @@ const config = {
     "db"
   ],
   "activeProvider": "mongodb",
-  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
