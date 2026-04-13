@@ -1,0 +1,41 @@
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  email       String    @unique
+  phoneNumber String    @unique
+  password    String
+  role        Role
+  stages      Stage[]   @default([])
+  isActive    Boolean   @default(true)
+  lastLogin   DateTime? 
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([role])
+  @@index([createdAt(sort: Desc)])
+}
+
+enum Role {
+  admin
+  operator
+  viewer
+}
+
+enum Stage {
+  penginputan
+  penelitian
+  pengarsipan
+  pengiriman
+  pemeriksaan
+}
